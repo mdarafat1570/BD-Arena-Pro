@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BD Arena Pro — Tournament Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fire: #FF4500;
+    --fire2: #FF6B00;
+    --gold: #FFD700;
+    --dark: #080A0F;
+    --dark2: #0D1117;
+    --dark3: #141921;
+    --dark4: #1A2030;
+    --border: rgba(255,69,0,0.25);
+    --text: #E8EAF0;
+    --muted: #6B7280;
+    --green: #00E676;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,69,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,69,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width: 600px; height: 600px; background: var(--fire); top: -200px; left: -100px; animation: float1 8s ease-in-out infinite; }
+  .orb2 { width: 400px; height: 400px; background: #FF6B00; bottom: 0; right: -100px; animation: float2 10s ease-in-out infinite; }
+
+  @keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,30px)} }
+  @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,-40px)} }
+
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 64px;
+    background: rgba(8,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 20px;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, var(--fire), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-decoration: none;
+  }
+
+  .logo span { color: white; -webkit-text-fill-color: white; }
+
+  nav ul {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  nav ul a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  nav ul a:hover, nav ul a.active { color: var(--fire); }
+
+  .nav-right { display: flex; gap: 12px; align-items: center; }
+
+  .btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 9px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-ghost:hover { border-color: var(--fire); color: var(--fire); }
+
+  .btn-fire {
+    background: linear-gradient(135deg, var(--fire), var(--fire2));
+    color: white;
+    box-shadow: 0 0 20px rgba(255,69,0,0.3);
+  }
+  .btn-fire:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(255,69,0,0.5); }
+
+  .hero { position: relative; z-index: 1; min-height: 85vh; display: flex; align-items: center; padding: 80px 40px 60px; overflow: hidden; }
+  .hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 50%, rgba(255,69,0,0.08) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(255,107,0,0.05) 0%, transparent 50%); }
+  .hero-content { max-width: 600px; animation: slideUp 0.8s ease both; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,69,0,0.1); border: 1px solid rgba(255,69,0,0.3); border-radius: 2px; padding: 6px 14px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--fire); font-family: 'Rajdhani', sans-serif; font-weight: 600; margin-bottom: 24px; }
+  .pulse { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.5)} }
+  .hero h1 { font-family: 'Orbitron', monospace; font-size: clamp(36px, 6vw, 72px); font-weight: 900; line-height: 1.05; letter-spacing: -1px; margin-bottom: 20px; }
+  .hero h1 .fire-text { background: linear-gradient(135deg, var(--fire), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero p { font-size: 16px; color: var(--muted); line-height: 1.7; margin-bottom: 36px; max-width: 480px; }
+  .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+  .hero-stats { display: flex; gap: 40px; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border); }
+  .stat-num { font-family: 'Orbitron', monospace; font-size: 28px; font-weight: 700; color: white; }
+  .stat-num span { color: var(--fire); }
+  .stat-label { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  .hero-visual { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); animation: slideUp 1s 0.3s ease both; display: flex; flex-direction: column; gap: 16px; }
+  .match-card-mini { background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; width: 280px; position: relative; overflow: hidden; transition: transform 0.2s; }
+  .match-card-mini::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--fire), var(--gold)); }
+  .match-card-mini:hover { transform: translateX(-4px); }
+  .mc-game { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--fire); font-family: 'Rajdhani', sans-serif; font-weight: 600; margin-bottom: 8px; }
+  .mc-title { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 17px; color: white; margin-bottom: 12px; }
+  .mc-prize { font-family: 'Orbitron', monospace; font-size: 15px; color: var(--gold); font-weight: 700; }
+  .mc-badge { font-size: 10px; padding: 3px 8px; border-radius: 2px; font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .badge-live { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+  .badge-soon { background: rgba(255,69,0,0.1); color: var(--fire); border: 1px solid rgba(255,69,0,0.3); }
+
+  section { position: relative; z-index: 1; padding: 80px 40px; }
+  .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 16px; }
+  .section-tag { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--fire); font-family: 'Rajdhani', sans-serif; font-weight: 600; margin-bottom: 8px; }
+  .section-title { font-family: 'Orbitron', monospace; font-size: clamp(22px, 3vw, 36px); font-weight: 700; color: white; }
+
+  .tournaments-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .tournament-card { background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.3s; cursor: pointer; animation: fadeIn 0.6s ease both; }
+  .tournament-card:hover { border-color: rgba(255,69,0,0.5); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 30px rgba(255,69,0,0.08); }
+  .card-banner { height: 130px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .banner-ff { background: linear-gradient(135deg, #1a0a00, #3d1500, #FF4500 200%); }
+  .banner-pubg { background: linear-gradient(135deg, #0a0a1a, #001a3d, #0066FF 200%); }
+  .card-body { padding: 20px; }
+  .card-game-type { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .card-title { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 20px; color: white; margin-bottom: 16px; }
+  .card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; padding: 14px; background: var(--dark4); border-radius: 6px; }
+  .meta-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .meta-value { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 16px; color: white; }
+  .meta-value.gold { color: var(--gold); }
+  .progress-bar { height: 4px; background: var(--dark4); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--fire), var(--gold)); border-radius: 2px; transition: width 1s ease; }
+
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+  .modal-overlay.active {
+    visibility: visible;
+    opacity: 1;
+  }
+  .modal-container {
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 440px;
+    padding: 32px;
+    position: relative;
+    box-shadow: 0 30px 50px rgba(0,0,0,0.6);
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+  }
+  .modal-overlay.active .modal-container {
+    transform: scale(1);
+  }
+  .modal-close {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--fire); }
+  .modal-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 26px;
+    margin-bottom: 28px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--fire), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .input-group {
+    margin-bottom: 20px;
+  }
+  .input-group label {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: 'Rajdhani', sans-serif;
+  }
+  .input-group input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--dark4);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .input-group input:focus {
+    border-color: var(--fire);
+  }
+  .switch-auth {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .switch-auth span {
+    color: var(--fire);
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .user-greeting {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .user-avatar {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--fire), var(--gold));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-family: 'Orbitron', monospace;
+  }
+  .wallet-section { background: var(--dark2); }
+  .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 800px; }
+  .wallet-card { background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; padding: 28px; position: relative; overflow: hidden; }
+  .wallet-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--fire), var(--gold)); }
+  .wallet-amount { font-family: 'Orbitron', monospace; font-size: 32px; font-weight: 700; color: white; margin-bottom: 20px; }
+  .payment-methods { background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; padding: 28px; grid-column: 1 / -1; }
+  .payment-list { display: flex; gap: 16px; flex-wrap: wrap; }
+  .payment-item { flex: 1; background: var(--dark4); border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s; }
+  .payment-item.selected { border-color: var(--fire); background: rgba(255,69,0,0.05); }
+  .leaderboard-table { width: 100%; border-collapse: collapse; background: var(--dark3); border-radius: 10px; overflow: hidden; }
+  .leaderboard-table th, .leaderboard-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  .rank-1 { color: var(--gold); }
+  .rank-2 { color: #C0C0C0; }
+  .rank-3 { color: #CD7F32; }
+  .footer { background: var(--dark2); border-top: 1px solid var(--border); padding: 40px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+  .notif-bar { background: linear-gradient(90deg, rgba(255,69,0,0.15), rgba(255,107,0,0.1)); border-bottom: 1px solid rgba(255,69,0,0.2); padding: 10px 40px; display: flex; gap: 12px; font-size: 13px; overflow: hidden; }
+  .ticker { flex: 1; overflow: hidden; white-space: nowrap; }
+  .ticker-inner { display: inline-block; animation: ticker 25s linear infinite; }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0 40px; }
+  @media (max-width: 768px) { nav ul { display: none; } .hero-visual { display: none; } .wallet-grid { grid-template-columns: 1fr; } section { padding: 60px 20px; } }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="notif-bar">
+  <strong>🔥 LIVE</strong>
+  <div class="ticker"><div class="ticker-inner">
+    🏆 RahimFF won ৳5,000 in Solo Blitz &nbsp;&nbsp;⚡&nbsp;&nbsp;
+    🎮 Squad Championship ৳50,000 prize pool &nbsp;&nbsp;⚡&nbsp;&nbsp;
+    📈 KabirGamer reached #1 leaderboard &nbsp;&nbsp;⚡&nbsp;&nbsp;
+    🔥 New TDM 4v4 tournament open &nbsp;&nbsp;⚡&nbsp;&nbsp;
+    🇧🇩 BD Arena Pro — 500+ active players
+  </div></div>
+</div>
+
+<nav>
+  <a class="logo" href="#">BD<span>ARENA PRO</span></a>
+  <ul>
+    <li><a class="nav-link active" data-section="home">Home</a></li>
+    <li><a class="nav-link" data-section="tournaments">Tournaments</a></li>
+    <li><a class="nav-link" data-section="leaderboard">Leaderboard</a></li>
+    <li><a class="nav-link" data-section="wallet">Wallet</a></li>
+  </ul>
+  <div class="nav-right" id="navRight">
+    <a href="#" class="btn btn-ghost" id="openLoginBtn">Login</a>
+    <a href="#" class="btn btn-fire" id="openRegisterBtn">▶ Register Free</a>
+  </div>
+</nav>
+
+<!-- HERO SECTION - ALWAYS VISIBLE -->
+<div id="homeSection" class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="pulse"></span> Bangladesh's #1 Gaming Platform</div>
+    <h1>COMPETE.<br><span class="fire-text">WIN REAL</span><br>MONEY.</h1>
+    <p>Join paid Free Fire & PUBG tournaments. Beat the competition, climb the leaderboard, and withdraw your winnings directly to bKash or Nagad.</p>
+    <div class="hero-ctas"><a href="#" class="btn btn-fire" id="heroJoinBtn" style="font-size:15px;padding:13px 28px">🎮 Join Tournament</a><a href="#" class="btn btn-ghost" style="font-size:15px;padding:13px 28px">How It Works →</a></div>
+    <div class="hero-stats"><div class="stat-item"><div class="stat-num">15<span>K+</span></div><div class="stat-label">Players</div></div><div class="stat-item"><div class="stat-num">৳12<span>L+</span></div><div class="stat-label">Prize Paid</div></div><div class="stat-item"><div class="stat-num">520<span>+</span></div><div class="stat-label">Tournaments</div></div></div>
+  </div>
+  <div class="hero-visual">
+    <div class="match-card-mini"><div class="mc-game">🔥 Free Fire · Solo</div><div class="mc-title">Midnight Blitz Championship</div><div class="mc-row"><div><div style="font-size:10px;color:var(--muted)">Prize Pool</div><div class="mc-prize">৳10,000</div></div><div><div class="mc-badge badge-live">● Live</div></div></div></div>
+    <div class="match-card-mini"><div class="mc-game">🎯 PUBG Mobile · Squad</div><div class="mc-title">Weekend Warriors — Season 4</div><div class="mc-row"><div><div style="font-size:10px;color:var(--muted)">Prize Pool</div><div class="mc-prize">৳50,000</div></div><div><div class="mc-badge badge-soon">Reg. Open</div></div></div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- TOURNAMENTS SECTION - 5 TOURNAMENTS -->
+<section id="tournamentsSection">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">// Active Now</div>
+      <div class="section-title">Open Tournaments <span style="font-size:14px; color:var(--fire);">(5 Tournaments)</span></div>
+    </div>
+  </div>
+  <div class="tournaments-grid" id="tournamentGrid"></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- LEADERBOARD SECTION - 5 TOP PLAYERS -->
+<section id="leaderboardSection">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">// Hall of Fame</div>
+      <div class="section-title">Top Players <span style="font-size:14px; color:var(--fire);">(Top 5)</span></div>
+    </div>
+  </div>
+  <div style="background:var(--dark3);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <table class="leaderboard-table" id="leaderboardTable">
+      <thead>
+        <tr><th>Rank</th><th>Player</th><th>Game</th><th>Matches</th><th>Wins</th><th>Total Earned</th></tr>
+      </thead>
+      <tbody id="leaderboardBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- WALLET SECTION -->
+<section id="walletSection" class="wallet-section">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">// My Account</div>
+      <div class="section-title">Wallet & Payments</div>
+    </div>
+  </div>
+  <div class="wallet-grid">
+    <div class="wallet-card">
+      <div class="wallet-icon">💰</div>
+      <div class="wallet-label">Available Balance</div>
+      <div class="wallet-amount" id="displayBalance"><span>৳</span>0.00</div>
+      <div class="wallet-actions">
+        <a href="#" class="btn btn-fire btn-sm" id="addMoneyMock" style="padding:8px 16px; font-size:12px;">+ Add Money</a>
+        <a href="#" class="btn btn-ghost btn-sm" style="padding:8px 16px; font-size:12px;">Withdraw</a>
+      </div>
+    </div>
+    <div class="wallet-card">
+      <div class="wallet-icon">🏆</div>
+      <div class="wallet-label">Total Winnings</div>
+      <div class="wallet-amount" style="color:var(--gold)" id="totalWinningsDisplay">৳0</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">From tournaments this season</div>
+    </div>
+    <div class="payment-methods">
+      <div class="payment-title">Select Payment Method</div>
+      <div class="payment-list">
+        <div class="payment-item selected" data-method="bkash">
+          <div class="payment-logo" style="background:#E2136E; width:48px; height:48px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold;">bK</div>
+          <div class="payment-info"><div class="payment-name">bKash</div><div class="payment-desc">Instant transfer · No fee</div></div>
+        </div>
+        <div class="payment-item" data-method="nagad">
+          <div class="payment-logo" style="background:#F7941D; width:48px; height:48px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold;">NG</div>
+          <div class="payment-info"><div class="payment-name">Nagad</div><div class="payment-desc">Instant transfer · No fee</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div>
+    <div class="footer-logo">BD<span style="color:var(--fire);">ARENA PRO</span></div>
+    <div class="footer-copy" style="margin-top:6px">© 2025 BD Arena Pro. All rights reserved.</div>
+  </div>
+  <div class="footer-links">
+    <a href="#">Terms</a>
+    <a href="#">Privacy</a>
+    <a href="#">Support</a>
+  </div>
+</footer>
+
+<!-- MODAL LOGIN/REGISTER -->
+<div id="authModal" class="modal-overlay">
+  <div class="modal-container">
+    <span class="modal-close" id="closeModal">&times;</span>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+  // Tournament Data - 5 Active Tournaments
+  const tournamentsData = [
+    { id: 1, game: "Free Fire", mode: "Solo", title: "Midnight Blitz Championship", prize: 10000, entry: 50, kill: 30, slots: 87, maxSlots: 100, status: "live", type: "ff" },
+    { id: 2, game: "PUBG Mobile", mode: "Squad", title: "Weekend Warriors — Season 4", prize: 50000, entry: 200, kill: 50, slots: 34, maxSlots: 64, status: "open", type: "pubg" },
+    { id: 3, game: "Free Fire", mode: "Duo", title: "Street Fighter Cup — Duo", prize: 5000, entry: 30, kill: 20, slots: 50, maxSlots: 50, status: "full", type: "ff" },
+    { id: 4, game: "Free Fire", mode: "Squad", title: "Gold League — Weekly Finals", prize: 25000, entry: 100, kill: 40, slots: 12, maxSlots: 50, status: "soon", type: "ff" },
+    { id: 5, game: "PUBG Mobile", mode: "Solo", title: "Solo Survivor Series", prize: 8000, entry: 40, kill: 25, slots: 45, maxSlots: 60, status: "open", type: "pubg" }
+  ];
+
+  // Leaderboard Data - 5 Top Players
+  const leaderboardData = [
+    { rank: 1, name: "KabirGamer", uid: "4829301", game: "Free Fire", matches: 48, wins: 31, earned: 42500, avatar: "KG", color: "#FFD700" },
+    { rank: 2, name: "RahimXtreme", uid: "3847291", game: "Free Fire", matches: 52, wins: 28, earned: 38200, avatar: "RX", color: "#C0C0C0" },
+    { rank: 3, name: "TigerFF_BD", uid: "9182736", game: "PUBG", matches: 39, wins: 22, earned: 29000, avatar: "TF", color: "#CD7F32" },
+    { rank: 4, name: "ShadowKiller", uid: "5647382", game: "Free Fire", matches: 44, wins: 19, earned: 21500, avatar: "SK", color: "#6B7280" },
+    { rank: 5, name: "NightZone_Pro", uid: "1029384", game: "PUBG", matches: 35, wins: 15, earned: 17800, avatar: "NZ", color: "#6B7280" }
+  ];
+
+  let currentUser = null;
+  let users = JSON.parse(localStorage.getItem('bdarena_users')) || [];
+
+  function saveUsers() { localStorage.setItem('bdarena_users', JSON.stringify(users)); }
+
+  function renderTournaments() {
+    const grid = document.getElementById('tournamentGrid');
+    if (!grid) return;
+    grid.innerHTML = tournamentsData.map(t => {
+      const percent = (t.slots / t.maxSlots) * 100;
+      let statusBadge = '';
+      if (t.status === 'live') statusBadge = '<span class="mc-badge badge-live">● LIVE</span>';
+      else if (t.status === 'full') statusBadge = '<span class="mc-badge" style="background:rgba(107,114,128,0.2); color:var(--muted);">Full</span>';
+      else statusBadge = '<span class="mc-badge badge-soon">Open</span>';
+      
+      return `<div class="tournament-card">
+        <div class="card-banner ${t.game === 'Free Fire' ? 'banner-ff' : 'banner-pubg'}">
+          <div class="banner-icon">${t.game === 'Free Fire' ? '🔥' : '🎯'}</div>
+          <div class="card-status">${statusBadge}</div>
+        </div>
+        <div class="card-body">
+          <div class="card-game-type">${t.game} · ${t.mode}</div>
+          <div class="card-title">${t.title}</div>
+          <div class="card-meta">
+            <div class="meta-item"><div class="meta-label">Prize Pool</div><div class="meta-value gold">৳${t.prize.toLocaleString()}</div></div>
+            <div class="meta-item"><div class="meta-label">Entry Fee</div><div class="meta-value fire">৳${t.entry}</div></div>
+            <div class="meta-item"><div class="meta-label">Per Kill</div><div class="meta-value">৳${t.kill}</div></div>
+            <div class="meta-item"><div class="meta-label">Mode</div><div class="meta-value">${t.mode}</div></div>
+          </div>
+          <div class="card-progress">
+            <div class="progress-label"><span>${t.slots} / ${t.maxSlots} slots</span><span>${Math.round(percent)}%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+          </div>
+          <div class="card-footer">
+            <button class="btn btn-fire join-tourney-btn" data-id="${t.id}" data-entry="${t.entry}" style="width:100%;">Join ৳${t.entry}</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.querySelectorAll('.join-tourney-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!currentUser) {
+          openAuthModal('login');
+          return;
+        }
+        const entry = parseInt(btn.getAttribute('data-entry'));
+        const tourneyId = parseInt(btn.getAttribute('data-id'));
+        if (currentUser.balance >= entry) {
+          currentUser.balance -= entry;
+          const tourney = tournamentsData.find(t => t.id === tourneyId);
+          if (tourney && tourney.slots < tourney.maxSlots) {
+            tourney.slots += 1;
+            alert(`✅ Successfully joined ${tourney.title}! Entry fee ৳${entry} deducted.`);
+            renderTournaments();
+            updateWalletDisplay();
+            const userIndex = users.findIndex(u => u.username === currentUser.username);
+            if (userIndex !== -1) { users[userIndex] = { ...currentUser }; saveUsers(); }
+          } else { alert("Tournament is full!"); }
+        } else { alert("❌ Insufficient balance! Add money to your wallet."); }
+      });
+    });
+  }
+
+  function renderLeaderboard() {
+    const tbody = document.getElementById('leaderboardBody');
+    tbody.innerHTML = leaderboardData.map(p => {
+      let rankClass = '';
+      if (p.rank === 1) rankClass = 'rank-1';
+      else if (p.rank === 2) rankClass = 'rank-2';
+      else if (p.rank === 3) rankClass = 'rank-3';
+      else rankClass = 'rank-other';
+      return `<tr>
+        <td><span class="${rankClass}" style="font-weight:700;">${p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : '#' + p.rank}</span></td>
+        <td><div class="player-info"><div class="avatar" style="background:linear-gradient(135deg, var(--fire), var(--gold)); color:white;">${p.avatar}</div><div><div class="player-name">${p.name}</div><div class="player-uid">UID: ${p.uid}</div></div></div></td>
+        <td><span style="color:${p.game === 'Free Fire' ? 'var(--fire)' : '#0066FF'}">${p.game}</span></td>
+        <td>${p.matches}</td>
+        <td class="wins-col" style="color:var(--fire); font-weight:700;">${p.wins}</td>
+        <td class="prize-col" style="color:var(--gold);">৳${p.earned.toLocaleString()}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function updateWalletDisplay() {
+    if (currentUser) {
+      document.getElementById('displayBalance').innerHTML = `<span>৳</span>${currentUser.balance.toFixed(2)}`;
+      document.getElementById('totalWinningsDisplay').innerHTML = `৳${currentUser.totalWinnings}`;
+    } else {
+      document.getElementById('displayBalance').innerHTML = `<span>৳</span>0.00`;
+      document.getElementById('totalWinningsDisplay').innerHTML = `৳0`;
+    }
+  }
+
+  function updateNavForUser() {
+    const navRight = document.getElementById('navRight');
+    if (currentUser) {
+      navRight.innerHTML = `<div class="user-greeting"><div class="user-avatar">${currentUser.username.charAt(0).toUpperCase()}</div><span style="font-family:'Rajdhani';font-weight:600">${currentUser.username}</span><button id="logoutBtn" class="btn btn-ghost" style="padding:6px 14px">Logout</button></div>`;
+      document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        currentUser = null;
+        updateNavForUser();
+        updateWalletDisplay();
+        renderTournaments();
+      });
+    } else {
+      navRight.innerHTML = `<button class="btn btn-ghost" id="openLoginBtn">Login</button><button class="btn btn-fire" id="openRegisterBtn">▶ Register Free</button>`;
+      document.getElementById('openLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
+      document.getElementById('openRegisterBtn')?.addEventListener('click', () => openAuthModal('register'));
+    }
+  }
+
+  function openAuthModal(type) {
+    const modal = document.getElementById('authModal');
+    const modalContent = document.getElementById('modalContent');
+    if (type === 'login') {
+      modalContent.innerHTML = `<div class="modal-title">LOGIN</div><form id="authForm"><div class="input-group"><label>Username</label><input type="text" id="loginUsername" required></div><div class="input-group"><label>Password</label><input type="password" id="loginPassword" required></div><button type="submit" class="btn btn-fire" style="width:100%;">Login</button></form><div class="switch-auth">Don't have an account? <span id="switchToRegister">Register now</span></div>`;
+      document.getElementById('authForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        const user = users.find(u => u.username === username && u.password === password);
+        if (user) {
+          currentUser = { ...user };
+          updateNavForUser();
+          updateWalletDisplay();
+          renderTournaments();
+          closeModal();
+        } else { alert("Invalid credentials!"); }
+      });
+      document.getElementById('switchToRegister')?.addEventListener('click', () => openAuthModal('register'));
+    } else {
+      modalContent.innerHTML = `<div class="modal-title">REGISTER</div><form id="regForm"><div class="input-group"><label>Username</label><input type="text" id="regUsername" required></div><div class="input-group"><label>Password</label><input type="password" id="regPassword" required></div><div class="input-group"><label>Mobile (bKash/Nagad)</label><input type="text" id="regMobile" placeholder="01XXXXXXXXX"></div><button type="submit" class="btn btn-fire" style="width:100%;">Create Account</button></form><div class="switch-auth">Already have an account? <span id="switchToLogin">Login</span></div>`;
+      document.getElementById('regForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('regUsername').value;
+        const password = document.getElementById('regPassword').value;
+        const mobile = document.getElementById('regMobile').value;
+        if (users.find(u => u.username === username)) { alert("Username already taken!"); return; }
+        const newUser = { username, password, mobile, balance: 250.00, totalWinnings: 0 };
+        users.push(newUser);
+        saveUsers();
+        currentUser = { ...newUser };
+        updateNavForUser();
+        updateWalletDisplay();
+        renderTournaments();
+        closeModal();
+        alert("✅ Registration successful! You received ৳250 welcome bonus.");
+      });
+      document.getElementById('switchToLogin')?.addEventListener('click', () => openAuthModal('login'));
+    }
+    modal.classList.add('active');
+  }
+
+  function closeModal() { document.getElementById('authModal').classList.remove('active'); }
+
+  function showSection(sectionId) {
+    document.getElementById('homeSection').style.display = sectionId === 'home' ? 'flex' : 'none';
+    document.getElementById('tournamentsSection').style.display = sectionId === 'tournaments' ? 'block' : 'none';
+    document.getElementById('leaderboardSection').style.display = sectionId === 'leaderboard' ? 'block' : 'none';
+    document.getElementById('walletSection').style.display = sectionId === 'wallet' ? 'block' : 'none';
+    document.querySelectorAll('.nav-link').forEach(link => {
+      if (link.getAttribute('data-section') === sectionId) link.classList.add('active');
+      else link.classList.remove('active');
+    });
+    if (sectionId === 'tournaments') renderTournaments();
+    if (sectionId === 'leaderboard') renderLeaderboard();
+    if (sectionId === 'wallet') updateWalletDisplay();
+  }
+
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', (e) => { e.preventDefault(); showSection(link.getAttribute('data-section')); });
+  });
+
+  document.getElementById('heroJoinBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!currentUser) openAuthModal('login');
+    else showSection('tournaments');
+  });
+
+  document.getElementById('addMoneyMock')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!currentUser) { openAuthModal('login'); return; }
+    currentUser.balance += 500;
+    updateWalletDisplay();
+    const userIndex = users.findIndex(u => u.username === currentUser.username);
+    if (userIndex !== -1) { users[userIndex] = { ...currentUser }; saveUsers(); }
+    alert("✅ ৳500 added to your wallet!");
+  });
+
+  document.getElementById('closeModal')?.addEventListener('click', closeModal);
+  window.addEventListener('click', (e) => { if (e.target === document.getElementById('authModal')) closeModal(); });
+
+  document.querySelectorAll('.payment-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.payment-item').forEach(i => i.classList.remove('selected'));
+      this.classList.add('selected');
+    });
+  });
+
+  renderTournaments();
+  renderLeaderboard();
+  updateNavForUser();
+  updateWalletDisplay();
+  showSection('home');
+</script>
+</body>
+</html>
